@@ -323,9 +323,21 @@ void hid_gamepad_axis(GamepadAxis axis, double value) {
 }
 
 void hid_gamepad_gyro(Vector gyro, Vector accel) {
-    gamepad_gyro = gyro;
-    gamepad_accel = accel;
-    profile_set_reported_inputs(true);
+    if (config_get_protocol() != PROTOCOL_GENERIC) return;
+
+    if (
+        gyro.x != gamepad_gyro.x ||
+        gyro.y != gamepad_gyro.y ||
+        gyro.z != gamepad_gyro.z ||
+        accel.x != gamepad_accel.x ||
+        accel.y != gamepad_accel.y ||
+        accel.z != gamepad_accel.z
+    ) {
+        gamepad_gyro = gyro;
+        gamepad_accel = accel;
+        synced_gamepad = false;
+        profile_set_reported_inputs(true);
+    }
 }
 
 MouseReport hid_get_mouse_report() {
