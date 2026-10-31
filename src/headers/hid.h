@@ -4,6 +4,7 @@
 #pragma once
 #include <stdbool.h>
 #include <pico/time.h>
+#include "vector.h"
 
 #define MODIFIER_INDEX 154
 #define MOUSE_INDEX 162
@@ -263,10 +264,62 @@
 #define PROC_SLEEP  PROC_INDEX + 42
 #define PROC_PAIR  PROC_INDEX + 43
 
+#define SINPUT_COMMAND_HAPTICS 1
+#define SINPUT_COMMAND_FEATURES 2
+#define SINPUT_COMMAND_PLAYER_LEDS 3
+#define SINPUT_COMMAND_JOYSTICK_LEDS 4
+
+#define SINPUT_BUTTON_SOUTH            0
+#define SINPUT_BUTTON_EAST             1
+#define SINPUT_BUTTON_WEST             2
+#define SINPUT_BUTTON_NORTH            3
+#define SINPUT_BUTTON_DPAD_UP          4
+#define SINPUT_BUTTON_DPAD_DOWN        5
+#define SINPUT_BUTTON_DPAD_LEFT        6
+#define SINPUT_BUTTON_DPAD_RIGHT       7
+#define SINPUT_BUTTON_STICK_LEFT       8
+#define SINPUT_BUTTON_STICK_RIGHT      9
+#define SINPUT_BUTTON_LEFT_SHOULDER    10
+#define SINPUT_BUTTON_RIGHT_SHOULDER   11
+#define SINPUT_BUTTON_LEFT_TRIGGER     12
+#define SINPUT_BUTTON_RIGHT_TRIGGER    13
+#define SINPUT_BUTTON_LEFT_PADDLE_1    14
+#define SINPUT_BUTTON_RIGHT_PADDLE_1   15
+#define SINPUT_BUTTON_START            16
+#define SINPUT_BUTTON_BACK             17
+#define SINPUT_BUTTON_GUIDE            18
+#define SINPUT_BUTTON_CAPTURE          19
+#define SINPUT_BUTTON_LEFT_PADDLE_2    20
+#define SINPUT_BUTTON_RIGHT_PADDLE_2   21
+#define SINPUT_BUTTON_LEFT_TOUCHPAD    22
+#define SINPUT_BUTTON_RIGHT_TOUCHPAD   23
+#define SINPUT_BUTTON_POWER            24
+#define SINPUT_BUTTON_MISC4            25
+#define SINPUT_BUTTON_MISC5            26
+#define SINPUT_BUTTON_MISC6            27
+#define SINPUT_BUTTON_MISC7            28
+#define SINPUT_BUTTON_MISC8            29
+#define SINPUT_BUTTON_MISC9            30
+#define SINPUT_BUTTON_MISC10           31
+
+#define SINPUT_FEATURES_RUMBLE 0x0001
+#define SINPUT_FEATURES_PLAYER_LED 0x0002
+#define SINPUT_FEATURES_ACCEL 0x0004
+#define SINPUT_FEATURES_GYRO 0x0008
+#define SINPUT_FEATURES_LEFT_ANALOG_STICK 0x0010
+#define SINPUT_FEATURES_RIGHT_ANALOG_STICK 0x0020
+#define SINPUT_FEATURES_LEFT_ANALOG_TRIGGER 0x0040
+#define SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER 0x0080
+#define SINPUT_FEATURES_TOUCHPAD 0x0100
+#define SINPUT_FEATURES_JOYSTICK_RGB 0x0200
+#define SINPUT_FEATURES_HANDHELD 0x0400
+
 typedef enum _ReportType {
-    REPORT_KEYBOARD = 1,
+    REPORT_GAMEPAD = 1,
+    REPORT_GAMEPAD_RESPONSE = 2,
+    REPORT_GAMEPAD_OUTPUT = 3,
+    REPORT_KEYBOARD,
     REPORT_MOUSE,
-    REPORT_GAMEPAD,
     REPORT_XINPUT,
     REPORT_WEBUSB,
     REPORT_REPLAY_KEYBOARD = 11,
@@ -287,6 +340,7 @@ typedef enum _GamepadAxis {
 void hid_init();
 void hid_thanks();
 void hid_set_allow_communication(bool value);
+void hid_output(uint8_t const *buffer, uint16_t size);
 
 // Keys.
 void hid_matrix_reset(uint8_t keep);
@@ -314,6 +368,7 @@ bool hid_is_mouse_axis(uint8_t action);
 bool hid_is_scroll_axis(uint8_t action);
 bool hid_is_gamepad_axis(uint8_t action);
 void hid_gamepad_axis(GamepadAxis axis, double value);
+void hid_gamepad_gyro(Vector gyro, Vector accel);
 
 // Report.
 bool hid_report_wired();
@@ -341,13 +396,45 @@ typedef struct __packed _MouseReport {
 } MouseReport;
 
 typedef struct __packed _GamepadReport {
+    uint8_t plug_status;
+    uint8_t charge_percent;
+    uint32_t buttons;
     int16_t lx;
     int16_t ly;
     int16_t rx;
     int16_t ry;
     int16_t lz;
     int16_t rz;
-    uint32_t buttons;
+    uint32_t imu_timestamp_us;
+    int16_t accel_x;
+    int16_t accel_y;
+    int16_t accel_z;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+    int16_t touchpad_1_x;
+    int16_t touchpad_1_y;
+    uint16_t touchpad_1_pressure;
+    int16_t touchpad_2_x;
+    int16_t touchpad_2_y;
+    uint16_t touchpad_2_pressure;
+    uint8_t padding[17];
 } GamepadReport;
+
+typedef struct __packed _GamepadFeaturesReport {
+    uint8_t command_id; // Always SINPUT_COMMAND_FEATURES
+    uint16_t protocol_version;
+    uint16_t feature_flags;
+    uint8_t physical_type;
+    uint8_t face_style_subproduct;
+    uint16_t polling_rate_us;
+    uint16_t accel_range;
+    uint16_t gyro_range;
+    uint32_t button_mask;
+    uint8_t touchpad_count;
+    uint8_t touchpad_finger_count;
+    uint8_t serial_number[6];
+    uint8_t padding[38];
+} GamepadFeaturesReport;
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload);

@@ -29,7 +29,8 @@ static const char *const descriptor_string[] = {
 uint8_t const descriptor_report_generic[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_KEYBOARD)),
     TUD_HID_REPORT_DESC_MOUSE_CUSTOM(HID_REPORT_ID(REPORT_MOUSE)),
-    TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
+    //TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM(HID_REPORT_ID(REPORT_GAMEPAD)),
+    TUD_HID_REPORT_DESC_GAMEPAD_SINPUT,
 };
 
 uint8_t const descriptor_report_xinput[] = {
@@ -66,12 +67,14 @@ uint8_t const *tud_descriptor_device_cb() {
         descriptor_device.idProduct = USB_UNIX_PRODUCT;
     }
     if (config_get_protocol() == PROTOCOL_GENERIC) {
-        descriptor_device.idVendor = USB_GENERIC_VENDOR;
-        #ifdef DEVICE_IS_ALPAKKA
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
-        #elif defined DEVICE_DONGLE
-            descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
-        #endif
+        //descriptor_device.idVendor = USB_GENERIC_VENDOR;
+        //#ifdef DEVICE_IS_ALPAKKA
+        //    descriptor_device.idProduct = USB_GENERIC_PRODUCT_ALPAKKA;
+        //#elif defined DEVICE_DONGLE
+        //    descriptor_device.idProduct = USB_GENERIC_PRODUCT_DONGLE;
+        //#endif
+        descriptor_device.idVendor = USB_SINPUT_VENDOR;
+        descriptor_device.idProduct = USB_SINPUT_PRODUCT;
     }
     return (uint8_t const *) &descriptor_device;
 }
@@ -168,7 +171,11 @@ void tud_hid_set_report_cb(
     hid_report_type_t report_type,
     uint8_t const* buffer,
     uint16_t bufsize
-) {}
+) {
+    if (report_id == 0 && report_type == HID_REPORT_TYPE_OUTPUT) {
+        hid_output(buffer, bufsize);
+    }
+}
 
 void tud_mount_cb(void) {
     debug_uart("USB: tud_mount_cb\n");

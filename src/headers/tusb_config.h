@@ -15,6 +15,7 @@
 #define CFG_TUD_ENDPOINT0_SIZE 64
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
+#define CFG_TUD_HID_EP_BUFSIZE 64
 
 #define CFG_TUD_HID 1
 #define CFG_TUD_CDC 0
@@ -27,6 +28,7 @@
 #define ITF_XINPUT 2
 
 #define ADDR_HID_IN 0x86
+#define ADDR_HID_OUT 0x05
 #define ADDR_WEBUSB_IN 0x83
 #define ADDR_WEBUSB_OUT 0x04
 #define ADDR_XINPUT_IN 0x81
@@ -57,6 +59,9 @@
 #define USB_GENERIC_VENDOR  0x0170  // Input Labs.
 #define USB_GENERIC_PRODUCT_ALPAKKA 0xAC80  // Alpakka (HID complilant gamepad)
 #define USB_GENERIC_PRODUCT_DONGLE  0xDC80  // Dongle (HID complilant gamepad)
+
+#define USB_SINPUT_VENDOR  0x2E8A
+#define USB_SINPUT_PRODUCT 0x10C6
 
 #define USB_TEST_VENDOR  0x0170  // Input Labs.
 #define USB_TEST_PRODUCT 0xFF00  // Test.
@@ -96,13 +101,14 @@
     0xFA         /* bMaxPower */
 
 #define DESCRIPTOR_INTERFACE_HID(report_size) \
-    TUD_HID_DESCRIPTOR( \
+    TUD_HID_INOUT_DESCRIPTOR( \
         ITF_HID,                /* Interface index */\
         ITF_HID + 4,            /* String index */\
         HID_ITF_PROTOCOL_NONE,  /* Boot protocol */\
         report_size,            /* Report descriptor length */\
-        ADDR_HID_IN,            /* Interface address */\
-        32,                     /* Endpoint buffer size */\
+        ADDR_HID_OUT,           /* Address out */\
+        ADDR_HID_IN,            /* Address in */\
+        64,                     /* Endpoint buffer size */\
         1                       /* Interface interval (ms) */\
     )
 
@@ -299,6 +305,84 @@
     HID_REPORT_COUNT  ( 32                                     ) ,\
     HID_REPORT_SIZE   ( 1                                      ) ,\
     HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+  HID_COLLECTION_END
+
+// SInput Gamepad descriptor.
+#define TUD_HID_REPORT_DESC_GAMEPAD_SINPUT \
+  HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                  ,\
+  HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                  ,\
+  HID_COLLECTION ( HID_COLLECTION_APPLICATION )                  ,\
+    /* Input Report */ \
+    HID_REPORT_ID ( 1 ) \
+    /* Plug status and Charge Percent */ \
+    HID_USAGE_PAGE_N  ( HID_USAGE_PAGE_VENDOR, 2               ) ,\
+    HID_USAGE         ( 1                                      ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 255, 1                                 ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( 2                                      ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Buttons */ \
+    HID_USAGE_PAGE    ( HID_USAGE_PAGE_BUTTON                  ) ,\
+    HID_USAGE_MIN     ( 1                                      ) ,\
+    HID_USAGE_MAX     ( 32                                     ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX   ( 1                                      ) ,\
+    HID_REPORT_SIZE   ( 1                                      ) ,\
+    HID_REPORT_COUNT  ( 32                                     ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Axes */ \
+    HID_USAGE_PAGE    ( HID_USAGE_PAGE_DESKTOP                 ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_X                    ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_Y                    ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_Z                    ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_RZ                   ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_RX                   ) ,\
+    HID_USAGE         ( HID_USAGE_DESKTOP_RY                   ) ,\
+    HID_LOGICAL_MIN_N ( -32768, 2                              ) ,\
+    HID_LOGICAL_MAX_N ( 32767, 2                               ) ,\
+    HID_REPORT_SIZE   ( 16                                     ) ,\
+    HID_REPORT_COUNT  ( 6                                      ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Vendor defined data */ \
+    HID_USAGE_PAGE_N  ( HID_USAGE_PAGE_VENDOR, 2               ) ,\
+    /* Gyro Timestamp */ \
+    HID_USAGE         ( 0x20                                   ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 65535, 2                               ) ,\
+    HID_REPORT_SIZE   ( 32                                     ) ,\
+    HID_REPORT_COUNT  ( 1                                      ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Accelerometer and Gyro */ \
+    HID_USAGE         ( 0x21                                   ) ,\
+    HID_LOGICAL_MIN_N ( -32768, 2                              ) ,\
+    HID_LOGICAL_MAX_N ( 32767, 2                               ) ,\
+    HID_REPORT_SIZE   ( 16                                     ) ,\
+    HID_REPORT_COUNT  ( 6                                      ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Padding/Reserved */ \
+    HID_USAGE         ( 0x22                                   ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 255, 1                                 ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( 29                                     ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Input Response Report */ \
+    HID_REPORT_ID ( 2 ) \
+    HID_USAGE         ( 0x23                                   ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 255, 1                                 ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( 63                                     ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Output Report */ \
+    HID_REPORT_ID ( 3 ) \
+    HID_USAGE         ( 0x24                                   ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 255, 1                                 ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( 47                                     ) ,\
+    HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END
 
 bool usb_wait_for_init(int16_t timeout);

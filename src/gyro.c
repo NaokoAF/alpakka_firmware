@@ -16,6 +16,8 @@
 
 double sensitivity_multiplier;
 
+Vector imu_gyro;
+Vector imu_accel;
 uint8_t world_init = 0;
 Vector world_top;
 Vector world_fw;
@@ -28,7 +30,7 @@ void gyro_update_sensitivity() {
 }
 
 void gyro_accel_correction() {
-    Vector accel = imu_read_accel();
+    Vector accel = imu_accel;
     // Convert to inverted unit value.
     accel.x /= -BIT_14;
     accel.y /= -BIT_14;
@@ -104,12 +106,11 @@ void Gyro__report_absolute(Gyro *self) {
     // Accel-based correction.
     gyro_accel_correction();
     // Get data from gyros.
-    Vector gyro = imu_read_gyro();
     static float sens = -BIT_18 * M_PI;
     // Rotate world space orientation.
-    Vector4 rx = quaternion(world_right, gyro.y / sens);
-    Vector4 ry = quaternion(world_fw, gyro.z / sens);
-    Vector4 rz = quaternion(world_top, gyro.x / sens);
+    Vector4 rx = quaternion(world_right, imu_gyro.y / sens);
+    Vector4 ry = quaternion(world_fw, imu_gyro.z / sens);
+    Vector4 rz = quaternion(world_top, imu_gyro.x / sens);
     static uint8_t i = 0;
     Vector4 r;
     if      (i==0) r = qmultiply(qmultiply(rx, ry), rz);
@@ -150,7 +151,6 @@ void Gyro__report_absolute(Gyro *self) {
 
 void Gyro__report_incremental(Gyro *self) {
      // Read gyro values.
-    Vector imu_gyro = imu_read_gyro();
     double x = imu_gyro.x * CFG_GYRO_SENSITIVITY_X * sensitivity_multiplier;
     double y = imu_gyro.y * CFG_GYRO_SENSITIVITY_Y * sensitivity_multiplier;
     double z = imu_gyro.z * CFG_GYRO_SENSITIVITY_Z * sensitivity_multiplier;
@@ -179,6 +179,10 @@ bool Gyro__is_engaged(Gyro *self) {
 }
 
 void Gyro__report(Gyro *self) {
+    imu_gyro = imu_read_gyro();
+    imu_accel = imu_read_accel();
+    hid_gamepad_gyro(imu_gyro, imu_accel);
+
     if (self->mode == GYRO_MODE_TOUCH_ON) {
         if (self->is_engaged(self)) self->report_incremental(self);
     }
