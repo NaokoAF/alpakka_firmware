@@ -79,6 +79,7 @@ double gamepad_axis[6] = {0,};
 double gamepad_axis_last[6] = {0,};
 Vector gamepad_gyro = {0,0,0};
 Vector gamepad_accel = {0,0,0};
+uint16_t gamepad_misc = 0;
 bool sinput_features_requested = false;
 
 // Replay reports.
@@ -340,6 +341,14 @@ void hid_gamepad_gyro(Vector gyro, Vector accel) {
     }
 }
 
+void hid_gamepad_misc(uint16_t buttons) {
+    if (gamepad_misc != buttons) {
+        gamepad_misc = buttons;
+        synced_gamepad = false;
+        profile_set_reported_inputs(true);
+    }
+}
+
 MouseReport hid_get_mouse_report() {
     // Create button bitmask.
     int8_t buttons = 0;
@@ -403,7 +412,7 @@ double hid_axis(
 }
 
 GamepadReport hid_get_gamepad_report() {
-    int32_t buttons = (
+    uint32_t buttons = (
         // Any value bigger than 1 consolidates to 1 (with !!).
         ((!!state_matrix[GAMEPAD_A])      << SINPUT_BUTTON_SOUTH) +
         ((!!state_matrix[GAMEPAD_B])      << SINPUT_BUTTON_EAST) +
@@ -419,7 +428,12 @@ GamepadReport hid_get_gamepad_report() {
         ((!!state_matrix[GAMEPAD_R1])     << SINPUT_BUTTON_RIGHT_SHOULDER) +
         ((!!state_matrix[GAMEPAD_START])  << SINPUT_BUTTON_START) +
         ((!!state_matrix[GAMEPAD_SELECT]) << SINPUT_BUTTON_BACK) +
-        ((!!state_matrix[GAMEPAD_HOME])   << SINPUT_BUTTON_GUIDE)
+        ((!!state_matrix[GAMEPAD_HOME])   << SINPUT_BUTTON_GUIDE) +
+        (((gamepad_misc & GAMEPAD_MISC_TOUCH) != 0) << SINPUT_BUTTON_CAPTURE) +
+        (((gamepad_misc & GAMEPAD_MISC_L4) != 0) << SINPUT_BUTTON_LEFT_PADDLE_1) +
+        (((gamepad_misc & GAMEPAD_MISC_R4) != 0) << SINPUT_BUTTON_RIGHT_PADDLE_1) +
+        (((gamepad_misc & GAMEPAD_MISC_SELECT2) != 0) << SINPUT_BUTTON_MISC3) +
+        (((gamepad_misc & GAMEPAD_MISC_START2) != 0) << SINPUT_BUTTON_MISC4)
     );
     // Adjust range from [-1,1] to [-32767,32767].
     int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
@@ -569,7 +583,7 @@ void hid_report_sinput_features() {
             SINPUT_FEATURES_LEFT_ANALOG_TRIGGER |
             SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER
         ),
-        .physical_type = 0x01, // Standard
+        .physical_type = SINPUT_PHYSICAL_TYPE_STANDARD,
         .face_style_subproduct = 0x00 | 0x1F, // Face style HID, Subproduct Dynamic
         .polling_rate_us = 4000,
         .accel_range = 2,
@@ -589,7 +603,12 @@ void hid_report_sinput_features() {
             (1 << SINPUT_BUTTON_RIGHT_SHOULDER) |
             (1 << SINPUT_BUTTON_START) |
             (1 << SINPUT_BUTTON_BACK) |
-            (1 << SINPUT_BUTTON_GUIDE)
+            (1 << SINPUT_BUTTON_GUIDE) |
+            (1 << SINPUT_BUTTON_CAPTURE) |
+            (1 << SINPUT_BUTTON_LEFT_PADDLE_1) |
+            (1 << SINPUT_BUTTON_RIGHT_PADDLE_1) |
+            (1 << SINPUT_BUTTON_MISC3) |
+            (1 << SINPUT_BUTTON_MISC4)
         ),
         .touchpad_count = 0,
         .touchpad_finger_count = 0,

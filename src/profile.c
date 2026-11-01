@@ -16,6 +16,7 @@
 #include "common.h"
 #include "power.h"
 #include "wireless.h"
+#include "touch.h"
 
 Profile profiles[PROFILE_SLOTS];
 uint8_t profile_active_index = -1;
@@ -69,6 +70,13 @@ void Profile__report(Profile *self) {
         self->right_thumbstick.report(&self->right_thumbstick);
     #endif
     self->gyro.report(&self->gyro);
+    hid_gamepad_misc(
+        (touch_status() << GAMEPAD_MISC_TOUCH) |
+        (self->l4.is_pressed(&self->l4) << GAMEPAD_MISC_L4) |
+        (self->r4.is_pressed(&self->r4) << GAMEPAD_MISC_R4) |
+        (self->select_2.is_pressed(&self->select_2) << GAMEPAD_MISC_SELECT2) |
+        (self->start_2.is_pressed(&self->start_2) << GAMEPAD_MISC_START2)
+    );
 }
 
 void Profile__reset(Profile *self) {

@@ -264,6 +264,12 @@
 #define PROC_SLEEP  PROC_INDEX + 42
 #define PROC_PAIR  PROC_INDEX + 43
 
+#define GAMEPAD_MISC_TOUCH     0
+#define GAMEPAD_MISC_L4        1
+#define GAMEPAD_MISC_R4        2
+#define GAMEPAD_MISC_SELECT2   3
+#define GAMEPAD_MISC_START2    4
+
 #define SINPUT_COMMAND_HAPTICS 1
 #define SINPUT_COMMAND_FEATURES 2
 #define SINPUT_COMMAND_PLAYER_LEDS 3
@@ -293,7 +299,7 @@
 #define SINPUT_BUTTON_RIGHT_PADDLE_2   21
 #define SINPUT_BUTTON_LEFT_TOUCHPAD    22
 #define SINPUT_BUTTON_RIGHT_TOUCHPAD   23
-#define SINPUT_BUTTON_POWER            24
+#define SINPUT_BUTTON_MISC3            24
 #define SINPUT_BUTTON_MISC4            25
 #define SINPUT_BUTTON_MISC5            26
 #define SINPUT_BUTTON_MISC6            27
@@ -313,6 +319,14 @@
 #define SINPUT_FEATURES_TOUCHPAD  0x0100
 #define SINPUT_FEATURES_JOYSTICK_RGB  0x0200
 #define SINPUT_FEATURES_HANDHELD  0x0400
+
+#define SINPUT_PHYSICAL_TYPE_UNKNOWN  0
+#define SINPUT_PHYSICAL_TYPE_STANDARD  1
+#define SINPUT_PHYSICAL_TYPE_XBOX_360  2
+#define SINPUT_PHYSICAL_TYPE_XBOX_ONE  3
+#define SINPUT_PHYSICAL_TYPE_PS3  4
+#define SINPUT_PHYSICAL_TYPE_PS4  5
+#define SINPUT_PHYSICAL_TYPE_PS5  6
 
 #define SINPUT_PLUG_STATUS_NO_BATTERY  0x00
 #define SINPUT_PLUG_STATUS_CHARGING  0x01
@@ -374,6 +388,7 @@ bool hid_is_scroll_axis(uint8_t action);
 bool hid_is_gamepad_axis(uint8_t action);
 void hid_gamepad_axis(GamepadAxis axis, double value);
 void hid_gamepad_gyro(Vector gyro, Vector accel);
+void hid_gamepad_misc(uint16_t buttons);
 
 // Report.
 bool hid_report_wired();
