@@ -302,17 +302,22 @@
 #define SINPUT_BUTTON_MISC9            30
 #define SINPUT_BUTTON_MISC10           31
 
-#define SINPUT_FEATURES_RUMBLE 0x0001
-#define SINPUT_FEATURES_PLAYER_LED 0x0002
-#define SINPUT_FEATURES_ACCEL 0x0004
-#define SINPUT_FEATURES_GYRO 0x0008
-#define SINPUT_FEATURES_LEFT_ANALOG_STICK 0x0010
-#define SINPUT_FEATURES_RIGHT_ANALOG_STICK 0x0020
-#define SINPUT_FEATURES_LEFT_ANALOG_TRIGGER 0x0040
-#define SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER 0x0080
-#define SINPUT_FEATURES_TOUCHPAD 0x0100
-#define SINPUT_FEATURES_JOYSTICK_RGB 0x0200
-#define SINPUT_FEATURES_HANDHELD 0x0400
+#define SINPUT_FEATURES_RUMBLE  0x0001
+#define SINPUT_FEATURES_PLAYER_LED  0x0002
+#define SINPUT_FEATURES_ACCEL  0x0004
+#define SINPUT_FEATURES_GYRO  0x0008
+#define SINPUT_FEATURES_LEFT_ANALOG_STICK  0x0010
+#define SINPUT_FEATURES_RIGHT_ANALOG_STICK  0x0020
+#define SINPUT_FEATURES_LEFT_ANALOG_TRIGGER  0x0040
+#define SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER  0x0080
+#define SINPUT_FEATURES_TOUCHPAD  0x0100
+#define SINPUT_FEATURES_JOYSTICK_RGB  0x0200
+#define SINPUT_FEATURES_HANDHELD  0x0400
+
+#define SINPUT_PLUG_STATUS_NO_BATTERY  0x00
+#define SINPUT_PLUG_STATUS_CHARGING  0x01
+#define SINPUT_PLUG_STATUS_CHARGED  0x02
+#define SINPUT_PLUG_STATUS_DISCHARGING  0x03
 
 typedef enum _ReportType {
     REPORT_GAMEPAD = 1,
@@ -396,6 +401,23 @@ typedef struct __packed _MouseReport {
 } MouseReport;
 
 typedef struct __packed _GamepadReport {
+    uint32_t buttons;
+    int16_t lx;
+    int16_t ly;
+    int16_t rx;
+    int16_t ry;
+    int16_t lz;
+    int16_t rz;
+    uint32_t imu_timestamp_us;
+    int16_t accel_x;
+    int16_t accel_y;
+    int16_t accel_z;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+} GamepadReport;
+
+typedef struct __packed _SInputReport {
     uint8_t plug_status;
     uint8_t charge_percent;
     uint32_t buttons;
@@ -419,9 +441,9 @@ typedef struct __packed _GamepadReport {
     int16_t touchpad_2_y;
     uint16_t touchpad_2_pressure;
     uint8_t padding[17];
-} GamepadReport;
+} SInputReport;
 
-typedef struct __packed _GamepadFeaturesReport {
+typedef struct __packed _SInputFeaturesReport {
     uint8_t command_id; // Always SINPUT_COMMAND_FEATURES
     uint16_t protocol_version;
     uint16_t feature_flags;
@@ -435,6 +457,6 @@ typedef struct __packed _GamepadFeaturesReport {
     uint8_t touchpad_finger_count;
     uint8_t serial_number[6];
     uint8_t padding[38];
-} GamepadFeaturesReport;
+} SInputFeaturesReport;
 
 void hid_report_dongle(uint8_t report_id, uint8_t* payload);

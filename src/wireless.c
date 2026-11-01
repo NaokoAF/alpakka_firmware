@@ -164,5 +164,6 @@ void wireless_controller_task() {
 
 void wireless_dongle_task() {
     // led_task();
+    hid_report_dongle(0, NULL);
     wireless_uart_commands();
 }

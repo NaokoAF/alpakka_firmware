@@ -79,7 +79,7 @@ double gamepad_axis[6] = {0,};
 double gamepad_axis_last[6] = {0,};
 Vector gamepad_gyro = {0,0,0};
 Vector gamepad_accel = {0,0,0};
-bool gamepad_features_requested = false;
+bool sinput_features_requested = false;
 
 // Replay reports.
 static KeyboardReport last_report_keyboard;
@@ -431,8 +431,6 @@ GamepadReport hid_get_gamepad_report() {
     int16_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_16 - BIT_15 - 1;
 
     GamepadReport report = {
-        .plug_status = 0x00, // No battery
-        .charge_percent = 100,
         .buttons = buttons,
         .lx = lx_report,
         .ly = ly_report,
@@ -447,53 +445,34 @@ GamepadReport hid_get_gamepad_report() {
         .gyro_x = (int16_t)gamepad_gyro.y,
         .gyro_y = (int16_t)gamepad_gyro.z,
         .gyro_z = (int16_t)gamepad_gyro.x,
+    };
+    return report;
+}
+
+SInputReport hid_convert_sinput_report(GamepadReport const* input, bool wired) {
+    SInputReport report = {
+        .plug_status = wired ? SINPUT_PLUG_STATUS_NO_BATTERY : SINPUT_PLUG_STATUS_DISCHARGING,
+        .charge_percent = 100, // TODO: Report battery
+        .buttons = input->buttons,
+        .lx = input->lx,
+        .ly = input->ly,
+        .rx = input->rx,
+        .ry = input->ry,
+        .lz = input->lz,
+        .rz = input->rz,
+        .imu_timestamp_us = input->imu_timestamp_us,
+        .accel_x = input->accel_x,
+        .accel_y = input->accel_y,
+        .accel_z = input->accel_z,
+        .gyro_x = input->gyro_x,
+        .gyro_y = input->gyro_y,
+        .gyro_z = input->gyro_z,
         .touchpad_1_x = 0,
         .touchpad_1_y = 0,
         .touchpad_1_pressure = 0,
         .touchpad_2_x = 0,
         .touchpad_2_y = 0,
         .touchpad_2_pressure = 0,
-    };
-    return report;
-}
-
-GamepadFeaturesReport hid_get_gamepad_features_report() {
-    GamepadFeaturesReport report = {
-        .command_id = SINPUT_COMMAND_FEATURES,
-        .protocol_version = 1,
-        .feature_flags = (
-            SINPUT_FEATURES_ACCEL |
-            SINPUT_FEATURES_GYRO |
-            SINPUT_FEATURES_LEFT_ANALOG_STICK |
-            SINPUT_FEATURES_RIGHT_ANALOG_STICK |
-            SINPUT_FEATURES_LEFT_ANALOG_TRIGGER |
-            SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER
-        ),
-        .physical_type = 0x01, // Standard
-        .face_style_subproduct = 0x00 | 0x1F, // Face style HID, Subproduct Dynamic
-        .polling_rate_us = 4000,
-        .accel_range = 2,
-        .gyro_range = 500,
-        .button_mask = (
-            (1 << SINPUT_BUTTON_SOUTH) |
-            (1 << SINPUT_BUTTON_EAST) |
-            (1 << SINPUT_BUTTON_WEST) |
-            (1 << SINPUT_BUTTON_NORTH) |
-            (1 << SINPUT_BUTTON_DPAD_UP) |
-            (1 << SINPUT_BUTTON_DPAD_DOWN) |
-            (1 << SINPUT_BUTTON_DPAD_LEFT) |
-            (1 << SINPUT_BUTTON_DPAD_RIGHT) |
-            (1 << SINPUT_BUTTON_STICK_LEFT) |
-            (1 << SINPUT_BUTTON_STICK_RIGHT) |
-            (1 << SINPUT_BUTTON_LEFT_SHOULDER) |
-            (1 << SINPUT_BUTTON_RIGHT_SHOULDER) |
-            (1 << SINPUT_BUTTON_START) |
-            (1 << SINPUT_BUTTON_BACK) |
-            (1 << SINPUT_BUTTON_GUIDE)
-        ),
-        .touchpad_count = 0,
-        .touchpad_finger_count = 0,
-        .serial_number = { 'I', 'N', 'P', 'L', 'B', 'S' },
     };
     return report;
 }
@@ -578,15 +557,59 @@ void hid_report_mouse(bool wired) {
     last_report_mouse = report;
 }
 
+void hid_report_sinput_features() {
+    SInputFeaturesReport report = {
+        .command_id = SINPUT_COMMAND_FEATURES,
+        .protocol_version = 1,
+        .feature_flags = (
+            SINPUT_FEATURES_ACCEL |
+            SINPUT_FEATURES_GYRO |
+            SINPUT_FEATURES_LEFT_ANALOG_STICK |
+            SINPUT_FEATURES_RIGHT_ANALOG_STICK |
+            SINPUT_FEATURES_LEFT_ANALOG_TRIGGER |
+            SINPUT_FEATURES_RIGHT_ANALOG_TRIGGER
+        ),
+        .physical_type = 0x01, // Standard
+        .face_style_subproduct = 0x00 | 0x1F, // Face style HID, Subproduct Dynamic
+        .polling_rate_us = 4000,
+        .accel_range = 2,
+        .gyro_range = 500,
+        .button_mask = (
+            (1 << SINPUT_BUTTON_SOUTH) |
+            (1 << SINPUT_BUTTON_EAST) |
+            (1 << SINPUT_BUTTON_WEST) |
+            (1 << SINPUT_BUTTON_NORTH) |
+            (1 << SINPUT_BUTTON_DPAD_UP) |
+            (1 << SINPUT_BUTTON_DPAD_DOWN) |
+            (1 << SINPUT_BUTTON_DPAD_LEFT) |
+            (1 << SINPUT_BUTTON_DPAD_RIGHT) |
+            (1 << SINPUT_BUTTON_STICK_LEFT) |
+            (1 << SINPUT_BUTTON_STICK_RIGHT) |
+            (1 << SINPUT_BUTTON_LEFT_SHOULDER) |
+            (1 << SINPUT_BUTTON_RIGHT_SHOULDER) |
+            (1 << SINPUT_BUTTON_START) |
+            (1 << SINPUT_BUTTON_BACK) |
+            (1 << SINPUT_BUTTON_GUIDE)
+        ),
+        .touchpad_count = 0,
+        .touchpad_finger_count = 0,
+        .serial_number = { 'I', 'N', 'P', 'L', 'B', 'S' },
+    };
+    tud_hid_report(REPORT_GAMEPAD_RESPONSE, &report, sizeof(report));
+}
+
 void hid_report_gamepad(bool wired) {
-    if (gamepad_features_requested) {
-        GamepadFeaturesReport report = hid_get_gamepad_features_report();
-        tud_hid_report(REPORT_GAMEPAD_RESPONSE, &report, sizeof(report));
-        gamepad_features_requested = false;
+    if (sinput_features_requested) {
+        hid_report_sinput_features();
+        sinput_features_requested = false;
     } else {
         GamepadReport report = hid_get_gamepad_report();
-        if (wired) tud_hid_report(REPORT_GAMEPAD, &report, sizeof(report));
-        else wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+        if (wired) {
+            SInputReport sinputReport = hid_convert_sinput_report(&report, true);
+            tud_hid_report(REPORT_GAMEPAD, &sinputReport, sizeof(sinputReport));
+        } else {
+            wireless_send_hid(REPORT_GAMEPAD, &report, sizeof(report));
+        }
         hid_set_gamepad_synced();
         last_report_gamepad = report;
     }
@@ -659,7 +682,7 @@ ReportType hid_get_priority() {
     // is a lot of mouse data being sent.
     //
     // Calculate priority ratios.
-    if (gamepad_features_requested) return REPORT_GAMEPAD;
+    if (sinput_features_requested) return REPORT_GAMEPAD;
     hid_evaluate_gamepad_synced(); // Special case because accumulative absolute axis.
     if (!synced_mouse) priority_mouse += 1 * HID_REPORT_PRIORITY_RATIO;
     if (!synced_gamepad) priority_gamepad += 1;
@@ -729,6 +752,14 @@ bool hid_report_wireless() {
 void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
     tud_task();
     if (tud_ready()) {
+        if (report_id == 0) {
+            if (tud_hid_ready()) {
+                if (sinput_features_requested) {
+                    hid_report_sinput_features();
+                    sinput_features_requested = false;
+                }
+            }
+        }
         if (report_id == REPORT_KEYBOARD) {
             if (tud_hid_ready()) {
                 tud_hid_report(REPORT_KEYBOARD, payload, sizeof(KeyboardReport));
@@ -741,7 +772,8 @@ void hid_report_dongle(uint8_t report_id, uint8_t* payload) {
         }
         if (report_id == REPORT_GAMEPAD) {
             if (tud_hid_ready()) {
-                tud_hid_report(REPORT_GAMEPAD, payload, sizeof(GamepadReport));
+                SInputReport sinputReport = hid_convert_sinput_report((GamepadReport*)payload, false);
+                tud_hid_report(REPORT_GAMEPAD, &sinputReport, sizeof(sinputReport));
             }
         }
         if (report_id == REPORT_XINPUT) {
@@ -756,7 +788,7 @@ void hid_output(uint8_t const *buffer, uint16_t size) {
     }
 
     if (buffer[1] == SINPUT_COMMAND_FEATURES) {
-        gamepad_features_requested = true;
+        sinput_features_requested = true;
     }
 }
 
