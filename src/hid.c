@@ -426,9 +426,9 @@ GamepadReport hid_get_gamepad_report() {
     int16_t ly_report = hid_axis(gamepad_axis[LY], GAMEPAD_AXIS_LY, GAMEPAD_AXIS_LY_NEG) * BIT_15;
     int16_t rx_report = hid_axis(gamepad_axis[RX], GAMEPAD_AXIS_RX, GAMEPAD_AXIS_RX_NEG) * BIT_15;
     int16_t ry_report = hid_axis(gamepad_axis[RY], GAMEPAD_AXIS_RY, GAMEPAD_AXIS_RY_NEG) * BIT_15;
-    // Adjust range from [0,1] to [0,32767].
-    int16_t lz_report = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * BIT_15;
-    int16_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_15;
+    // Adjust range from [0,1] to [-32768,32767].
+    int16_t lz_report = hid_axis(gamepad_axis[LZ], GAMEPAD_AXIS_LZ, 0) * BIT_16 - BIT_15 - 1;
+    int16_t rz_report = hid_axis(gamepad_axis[RZ], GAMEPAD_AXIS_RZ, 0) * BIT_16 - BIT_15 - 1;
 
     GamepadReport report = {
         .plug_status = 0x00, // No battery
