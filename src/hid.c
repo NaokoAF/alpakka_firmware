@@ -429,11 +429,11 @@ GamepadReport hid_get_gamepad_report() {
         ((!!state_matrix[GAMEPAD_START])  << SINPUT_BUTTON_START) +
         ((!!state_matrix[GAMEPAD_SELECT]) << SINPUT_BUTTON_BACK) +
         ((!!state_matrix[GAMEPAD_HOME])   << SINPUT_BUTTON_GUIDE) +
-        (((gamepad_misc & (1 << GAMEPAD_MISC_TOUCH)) != 0) << SINPUT_BUTTON_CAPTURE) +
         (((gamepad_misc & (1 << GAMEPAD_MISC_L4)) != 0) << SINPUT_BUTTON_LEFT_PADDLE_1) +
         (((gamepad_misc & (1 << GAMEPAD_MISC_R4)) != 0) << SINPUT_BUTTON_RIGHT_PADDLE_1) +
-        (((gamepad_misc & (1 << GAMEPAD_MISC_SELECT2)) != 0) << SINPUT_BUTTON_MISC3) +
-        (((gamepad_misc & (1 << GAMEPAD_MISC_START2)) != 0) << SINPUT_BUTTON_MISC4)
+        (((gamepad_misc & (1 << GAMEPAD_MISC_SELECT2)) != 0) << SINPUT_BUTTON_CAPTURE) +
+        (((gamepad_misc & (1 << GAMEPAD_MISC_START2)) != 0) << SINPUT_BUTTON_MISC3) +
+        (((gamepad_misc & (1 << GAMEPAD_MISC_TOUCH)) != 0) << SINPUT_BUTTON_MISC4)
     );
     // Adjust range from [-1,1] to [-32767,32767].
     int16_t lx_report = hid_axis(gamepad_axis[LX], GAMEPAD_AXIS_LX, GAMEPAD_AXIS_LX_NEG) * BIT_15;
