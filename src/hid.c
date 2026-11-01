@@ -455,10 +455,10 @@ GamepadReport hid_get_gamepad_report() {
         .imu_timestamp_us = 0, // TODO: Report IMU timestamps
         .accel_x = (int16_t)gamepad_accel.y,
         .accel_y = (int16_t)gamepad_accel.z,
-        .accel_z = (int16_t)gamepad_accel.x,
+        .accel_z = ~(int16_t)gamepad_accel.x,
         .gyro_x = (int16_t)gamepad_gyro.y,
         .gyro_y = (int16_t)gamepad_gyro.z,
-        .gyro_z = (int16_t)gamepad_gyro.x,
+        .gyro_z = ~(int16_t)gamepad_gyro.x,
     };
     return report;
 }
